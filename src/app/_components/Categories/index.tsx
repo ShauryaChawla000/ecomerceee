@@ -16,9 +16,7 @@ const Categories = ({ categories }: { categories: Category[] | null | undefined 
 
       <div className={classes.list}>
         {categories && categories.length > 0 ? (
-          categories.map(category => (
-            <CategoryCard key={category.id} category={category} />
-          ))
+          categories.map(category => <CategoryCard key={category.id} category={category} />)
         ) : (
           <p>No categories available</p>
         )}

@@ -15,20 +15,11 @@ import { productsPage } from './products-page'
 const collections = ['categories', 'media', 'pages', 'products']
 const globals = ['header', 'settings', 'footer']
 
-// Next.js revalidation errors are normal when seeding the database without a server running
-// i.e. running `yarn seed` locally instead of using the admin UI within an active app
-// The app is not running to revalidate the pages and so the API routes are not available
-// These error messages can be ignored: `Error hitting revalidate route for...`
 export const seed = async (payload: Payload): Promise<void> => {
   payload.logger.info('Seeding database...')
 
-  // we need to clear the media directory before seeding
-  // as well as the collections and globals
-  // this is because while `yarn seed` drops the database
-  // the custom `/api/seed` endpoint does not
-
+  // Clear the media directory before seeding
   payload.logger.info(`— Clearing media...`)
-
   const mediaDir = path.resolve(__dirname, '../../media')
   if (fs.existsSync(mediaDir)) {
     fs.rmdirSync(mediaDir, { recursive: true })
@@ -36,45 +27,41 @@ export const seed = async (payload: Payload): Promise<void> => {
 
   payload.logger.info(`— Clearing collections and globals...`)
 
-  // clear the database
+  // Clear the database
   await Promise.all([
     ...collections.map(async collection =>
       payload.delete({
         collection: collection as 'media',
         where: {},
-      }),
-    ), // eslint-disable-line function-paren-newline
+      }),),
     ...globals.map(async global =>
       payload.updateGlobal({
         slug: global as 'header',
-        data: {},
-      }),
-    ), // eslint-disable-line function-paren-newline
-  ])
+        data: {},}),),])
 
   payload.logger.info(`— Seeding media...`)
 
   const [image1Doc, image2Doc, image3Doc] = await Promise.all([
-    await payload.create({
+    payload.create({
       collection: 'media',
       filePath: path.resolve(__dirname, 'image-1.jpg'),
       data: image1,
     }),
-    await payload.create({
+    payload.create({
       collection: 'media',
       filePath: path.resolve(__dirname, 'image-2.jpg'),
       data: image2,
     }),
-    await payload.create({
+    payload.create({
       collection: 'media',
       filePath: path.resolve(__dirname, 'image-3.jpg'),
       data: image3,
     }),
   ])
 
-  let image1ID = image1Doc.id
-  let image2ID = image2Doc.id
-  let image3ID = image3Doc.id
+  let image1ID: string = image1Doc.id.toString()
+  let image2ID: string = image2Doc.id.toString()
+  let image3ID: string = image3Doc.id.toString()
 
   if (payload.db.defaultIDType === 'text') {
     image1ID = `"${image1ID}"`
@@ -85,19 +72,19 @@ export const seed = async (payload: Payload): Promise<void> => {
   payload.logger.info(`— Seeding categories...`)
 
   const [apparelCategory, ebooksCategory, coursesCategory] = await Promise.all([
-    await payload.create({
+    payload.create({
       collection: 'categories',
       data: {
         title: 'Apparel',
       },
     }),
-    await payload.create({
+    payload.create({
       collection: 'categories',
       data: {
         title: 'E-books',
       },
     }),
-    await payload.create({
+    payload.create({
       collection: 'categories',
       data: {
         title: 'Online courses',
@@ -107,8 +94,7 @@ export const seed = async (payload: Payload): Promise<void> => {
 
   payload.logger.info(`— Seeding products...`)
 
-  // Do not create product with `Promise.all` because we want the products to be created in order
-  // This way we can sort them by `createdAt` or `publishedOn` and they will be in the expected order
+  // Create products in order to maintain the expected sorting
   const product1Doc = await payload.create({
     collection: 'products',
     data: JSON.parse(
@@ -139,24 +125,23 @@ export const seed = async (payload: Payload): Promise<void> => {
     ),
   })
 
-  // update each product with related products
-
+  // Update each product with related products
   await Promise.all([
-    await payload.update({
+    payload.update({
       collection: 'products',
       id: product1Doc.id,
       data: {
         relatedProducts: [product2Doc.id, product3Doc.id],
       },
     }),
-    await payload.update({
+    payload.update({
       collection: 'products',
       id: product2Doc.id,
       data: {
         relatedProducts: [product1Doc.id, product3Doc.id],
       },
     }),
-    await payload.update({
+    payload.update({
       collection: 'products',
       id: product3Doc.id,
       data: {
@@ -172,7 +157,7 @@ export const seed = async (payload: Payload): Promise<void> => {
     data: productsPage,
   })
 
-  let productsPageID = productsPageDoc.id
+  let productsPageID: string = productsPageDoc.id.toString()
 
   if (payload.db.defaultIDType === 'text') {
     productsPageID = `"${productsPageID}"`
