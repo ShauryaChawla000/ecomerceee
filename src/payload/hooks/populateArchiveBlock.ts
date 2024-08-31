@@ -1,5 +1,4 @@
 import type { AfterReadHook } from 'payload/dist/collections/config/types'
-
 import type { Page, Product } from '../payload-types'
 
 export const populateArchiveBlock: AfterReadHook = async ({ doc, context, req: { payload } }) => {
@@ -17,7 +16,7 @@ export const populateArchiveBlock: AfterReadHook = async ({ doc, context, req: {
         }
 
         if (archiveBlock.populateBy === 'collection' && !context.isPopulatingArchiveBlock) {
-          const res: { totalDocs: number; docs: Product[] } = await payload.find({
+          const res = await payload.find({
             collection: archiveBlock?.relationTo || 'products',
             limit: archiveBlock.limit || 10,
             context: {
@@ -26,19 +25,19 @@ export const populateArchiveBlock: AfterReadHook = async ({ doc, context, req: {
             where: {
               ...((archiveBlock?.categories?.length || 0) > 0
                 ? {
-                    categories: {
-                      in: archiveBlock?.categories
-                        ?.map(cat => {
-                          if (typeof cat === 'string') return cat
-                          return cat.id
-                        })
-                        .join(','),
-                    },
-                  }
+                  categories: {
+                    in: archiveBlock?.categories
+                      ?.map(cat => {
+                        if (typeof cat === 'string') return cat
+                        return cat.id
+                      })
+                      .join(','),
+                  },
+                }
                 : {}),
             },
             sort: '-publishedOn',
-          })
+          }) as unknown as { totalDocs: number; docs: Product[] };
 
           return {
             ...block,
